@@ -150,12 +150,13 @@ class ClfTagger:
 
     def save(self, filename):
         with open(filename, "wb") as file:
-            pickle.dump([self.models, self.clf_thres], file)
+            pickle.dump([self.models, self.clf_thres, self.corpus], file)
 
     @classmethod
     def load(cls, filename):
         tagger = cls()
-        tagger.models, tagger.clf_thres = pickle.load(open(filename, "rb"))
+        tagger.models, tagger.clf_thres, tagger.corpus = \
+            pickle.load(open(filename, "rb"))
         return tagger
 
 

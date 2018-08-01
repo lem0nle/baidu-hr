@@ -42,26 +42,26 @@ class QuestionBank:
     def __init__(self, mc_ques, sa_ques, model=None):
         sentences = [q.main + ';' + ','.join(q.options) for q in mc_ques]
 
-        # TODO: set proper keep_n for your need
-        corpus = Corpus(sentences, keep_n=100)
-
         if model is None:
             # question clustering
+            # TODO: set proper keep_n for your need
+            corpus = Corpus(sentences, keep_n=100)
             # TODO: check model and n_clusters param
-            model = KMeans(len(mc_ques) // 3, n_jobs=-1)
+            model = KMeans(len(mc_ques) // 4, n_jobs=-1)
             model.fit(corpus.get_tfidf(sentences))
             labels = model.labels_
         else:
             if isinstance(model, str):
-                model = pickle.load(open(model, 'rb'))
+                corpus, model = pickle.load(open(model, 'rb'))
             labels = model.predict(corpus.get_tfidf(sentences))
+
+        self.corpus = corpus
+        self.model = model
 
         ques_by_cluster = defaultdict(list)
         for i, q in zip(labels, mc_ques):
             ques_by_cluster[i].append(q)
-
-        self.model = model
-        self.mc_ques = list(ques_by_cluster.values())
+        self.mc_ques_clusters = list(ques_by_cluster.values())
 
         # build sa_dict in advance as it doesn't change
         self.sa_ques = sa_ques
@@ -72,10 +72,10 @@ class QuestionBank:
 
     def save_model(self, filename):
         with open(filename, 'wb') as f:
-            pickle.dump(self.model, f)
+            pickle.dump((self.corpus, self.model), f)
 
     def recommend(self, post, resume, num=8):
-        mc_ques = [choice(x) for x in self.mc_ques]
+        mc_ques = [choice(x) for x in self.mc_ques_clusters]
 
         # group mc questions by skill
         mcq_dict = defaultdict(list)
