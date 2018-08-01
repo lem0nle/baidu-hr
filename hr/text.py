@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+from __future__ import unicode_literals, print_function
 import jieba
 import jieba.posseg as pseg
 from io import StringIO
@@ -33,25 +35,25 @@ def _cut_zh(text, filter_pos=False, filter_marks=False):
 
 def cut(text):
     rv = []
-    buffer = StringIO()
+    buffer = []
     mode = None
     for c in text.lower():
         if ord(c) < 128:
             if mode == 'zh':
-                rv.extend(_cut_zh(buffer.getvalue()))
-                buffer = StringIO()
+                rv.extend(_cut_zh(''.join(buffer)))
+                buffer = []
             mode = 'en'
-            buffer.write(c)
+            buffer.append(c)
         else:
             if mode == 'en':
-                rv.extend(tk.tokenize(buffer.getvalue()))
-                buffer = StringIO()
+                rv.extend(tk.tokenize(''.join(buffer)))
+                buffer = []
             mode = 'zh'
-            buffer.write(c)
+            buffer.append(c)
     if mode == 'zh':
-        rv.extend(_cut_zh(buffer.getvalue()))
+        rv.extend(_cut_zh(''.join(buffer)))
     elif mode == 'en':
-        rv.extend(tk.tokenize(buffer.getvalue()))
+        rv.extend(tk.tokenize(''.join(buffer)))
     return rv
 
 
@@ -77,20 +79,17 @@ def clean(text):
 class Corpus:
     """Class Corpus."""
 
-    def __init__(self, sentences, dict_file=None, keep_n=100000):
+    def __init__(self, sentences, keep_n=100000):
         """
         Args:
             sentences(list): list of str
-            dict_file(str): path of saved dictionary (optional)
             keep_n(int): maximum length of dictionary (default: 100000)
         """
         self.sentences = [cut(x) for x in sentences]
-        if dict_file:
-            self.dictionary = corpora.Dictionary.load(dict_file)
-        else:
-            self.dictionary = corpora.Dictionary(self.sentences)
+        self.dictionary = corpora.Dictionary(self.sentences)
         self.dictionary.filter_extremes(no_below=0, keep_n=keep_n)
-        self.tfidf_model = None
+        self.tfidf_model = TfidfModel(self.dictionary.doc2bow(x)
+                                      for x in self.sentences)
 
     def get_bow(self, sentences=None, dense=True):
         """Get the Bag-Of-Word representation of sentences.
@@ -125,9 +124,6 @@ class Corpus:
             list or numpy.ndarray:
                 numpy matrix if dense, else sparse representation
         """
-        if self.tfidf_model is None:
-            corpus = [self.dictionary.doc2bow(x) for x in self.sentences]
-            self.tfidf_model = TfidfModel(corpus)
         if sentences is None:
             sentences = self.sentences
         else:
@@ -137,6 +133,13 @@ class Corpus:
         if dense:
             vec = corpus2dense(vec, len(self.dictionary)).transpose()
         return vec
+
+    def __getstate__(self):
+        return {
+            'sentences': [],
+            'dictionary': self.dictionary,
+            'tfidf_model': self.tfidf_model
+        }
 
 
 if __name__ == '__main__':
