@@ -1,6 +1,9 @@
+import pickle
 from random import sample, choice, shuffle
-from functools import reduce
+from itertools import chain
 from collections import defaultdict, Counter
+from sklearn.cluster import KMeans
+from .text import Corpus
 from .skill import doc_tagger
 
 
@@ -19,8 +22,10 @@ def _get_weight(post, resume):
 
     # TODO: reduce weights after 优先
 
-    post_skills = reduce(lambda a, b: a + b, post_skills)
-    resume_skills = reduce(lambda a, b: a + b, resume_skills)
+    post_skills = list(chain(*post_skills))
+    resume_skills = list(chain(*resume_skills))
+    if len(resume_skills) == 0:
+        print(resume)
 
     rand_skill = choice(resume_skills)
     post_cnt = Counter(post_skills)
@@ -34,21 +39,50 @@ def _get_weight(post, resume):
 
 
 class QuestionBank:
-    def __init__(self, mc_ques, sa_ques):
-        # group questions by skill
+    def __init__(self, mc_ques, sa_ques, model=None):
+        sentences = [q.main + ';' + ','.join(q.options) for q in mc_ques]
+
+        # TODO: set proper keep_n for your need
+        corpus = Corpus(sentences, keep_n=100)
+
+        if model is None:
+            # question clustering
+            # TODO: check model and n_clusters param
+            model = KMeans(len(mc_ques) // 3, n_jobs=-1)
+            model.fit(corpus.get_tfidf(sentences))
+            labels = model.labels_
+        else:
+            if isinstance(model, str):
+                model = pickle.load(open(model, 'rb'))
+            labels = model.predict(corpus.get_tfidf(sentences))
+
+        ques_by_cluster = defaultdict(list)
+        for i, q in zip(labels, mc_ques):
+            ques_by_cluster[i].append(q)
+
+        self.model = model
+        self.mc_ques = list(ques_by_cluster.values())
+
+        # build sa_dict in advance as it doesn't change
+        self.sa_ques = sa_ques
+        self.saq_dict = defaultdict(list)
+        for ques in sa_ques:
+            for skill in ques.skills:
+                self.saq_dict[skill].append(ques)
+
+    def save_model(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.model, f)
+
+    def recommend(self, post, resume, num=8):
+        mc_ques = [choice(x) for x in self.mc_ques]
+
+        # group mc questions by skill
         mcq_dict = defaultdict(list)
-        saq_dict = defaultdict(list)
         for ques in mc_ques:
             for skill in ques.skills:
                 mcq_dict[skill].append(ques)
-        for ques in sa_ques:
-            for skill in ques.skills:
-                saq_dict[skill].append(ques)
 
-        self.mcq_dict = mcq_dict
-        self.saq_dict = saq_dict
-
-    def recommend(self, post, resume, num=8):
         weights, rand_skill = _get_weight(post, resume)
 
         counts = {k: round(v * num) for k, v in weights.items()}
@@ -60,13 +94,13 @@ class QuestionBank:
         for k, v in counts:
             if v == 0:
                 break
-            ques_list.extend(sample(self.mcq_dict[k], v))
+            ques_list.extend(sample(mcq_dict[k], min(v, len(mcq_dict[k]))))
         if len(ques_list) < num:
             tmp = []
             n_remain = num - len(ques_list)
             for k, v in counts[:3]:
-                tmp.extend(sample(self.mcq_dict[k],
-                                  min(n_remain, len(self.mcq_dict[k]))))
+                tmp.extend(sample(mcq_dict[k],
+                                  min(n_remain, len(mcq_dict[k]))))
             ques_list.extend(sample(tmp, n_remain))
 
         return ques_list
