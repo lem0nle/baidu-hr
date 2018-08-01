@@ -45,7 +45,7 @@ class QuestionBank:
         if model is None:
             # question clustering
             # TODO: set proper keep_n for your need
-            corpus = Corpus(sentences, keep_n=100)
+            corpus = Corpus(sentences, keep_n=1000)
             # TODO: check model and n_clusters param
             model = KMeans(len(mc_ques) // 4, n_jobs=-1)
             model.fit(corpus.get_tfidf(sentences))

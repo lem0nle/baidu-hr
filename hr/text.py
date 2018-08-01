@@ -77,20 +77,17 @@ def clean(text):
 class Corpus:
     """Class Corpus."""
 
-    def __init__(self, sentences, dict_file=None, keep_n=100000):
+    def __init__(self, sentences, keep_n=100000):
         """
         Args:
             sentences(list): list of str
-            dict_file(str): path of saved dictionary (optional)
             keep_n(int): maximum length of dictionary (default: 100000)
         """
         self.sentences = [cut(x) for x in sentences]
-        if dict_file:
-            self.dictionary = corpora.Dictionary.load(dict_file)
-        else:
-            self.dictionary = corpora.Dictionary(self.sentences)
+        self.dictionary = corpora.Dictionary(self.sentences)
         self.dictionary.filter_extremes(no_below=0, keep_n=keep_n)
-        self.tfidf_model = None
+        self.tfidf_model = TfidfModel(self.dictionary.doc2bow(x)
+                                      for x in self.sentences)
 
     def get_bow(self, sentences=None, dense=True):
         """Get the Bag-Of-Word representation of sentences.
@@ -125,9 +122,6 @@ class Corpus:
             list or numpy.ndarray:
                 numpy matrix if dense, else sparse representation
         """
-        if self.tfidf_model is None:
-            corpus = [self.dictionary.doc2bow(x) for x in self.sentences]
-            self.tfidf_model = TfidfModel(corpus)
         if sentences is None:
             sentences = self.sentences
         else:
@@ -137,6 +131,13 @@ class Corpus:
         if dense:
             vec = corpus2dense(vec, len(self.dictionary)).transpose()
         return vec
+
+    def __getstate__(self):
+        return {
+            'sentences': [],
+            'dictionary': self.dictionary,
+            'tfidf_model': self.tfidf_model
+        }
 
 
 if __name__ == '__main__':
