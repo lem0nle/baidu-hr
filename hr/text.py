@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+from __future__ import unicode_literals, print_function
 import jieba
 import jieba.posseg as pseg
 from io import StringIO
@@ -33,25 +35,25 @@ def _cut_zh(text, filter_pos=False, filter_marks=False):
 
 def cut(text):
     rv = []
-    buffer = StringIO()
+    buffer = []
     mode = None
     for c in text.lower():
         if ord(c) < 128:
             if mode == 'zh':
-                rv.extend(_cut_zh(buffer.getvalue()))
-                buffer = StringIO()
+                rv.extend(_cut_zh(''.join(buffer)))
+                buffer = []
             mode = 'en'
-            buffer.write(c)
+            buffer.append(c)
         else:
             if mode == 'en':
-                rv.extend(tk.tokenize(buffer.getvalue()))
-                buffer = StringIO()
+                rv.extend(tk.tokenize(''.join(buffer)))
+                buffer = []
             mode = 'zh'
-            buffer.write(c)
+            buffer.append(c)
     if mode == 'zh':
-        rv.extend(_cut_zh(buffer.getvalue()))
+        rv.extend(_cut_zh(''.join(buffer)))
     elif mode == 'en':
-        rv.extend(tk.tokenize(buffer.getvalue()))
+        rv.extend(tk.tokenize(''.join(buffer)))
     return rv
 
 

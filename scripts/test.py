@@ -1,5 +1,8 @@
+# -*- coding: UTF-8 -*-
+from __future__ import unicode_literals, print_function
 import json
 import os
+from six import itervalues
 import hr.document as doc
 import hr.recommendation as rcm
 
@@ -16,7 +19,7 @@ else:
     bank = rcm.QuestionBank(mcqs, saqs)
     bank.save_model(model_path)
 
-for v in post_resume.values():
+for v in itervalues(post_resume):
     post = doc.Post(terms=v['post'])
     resumes = v['resume']
     resumes = [doc.Resume(terms=r) for r in resumes]

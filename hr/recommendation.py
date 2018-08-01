@@ -1,4 +1,8 @@
-import pickle
+# -*- coding: UTF-8 -*-
+from __future__ import unicode_literals, print_function, division
+import six
+from six import itervalues, iteritems
+import six.moves.cPickle as pickle
 from random import sample, choice, shuffle
 from itertools import chain
 from collections import defaultdict, Counter
@@ -29,9 +33,11 @@ def _get_weight(post, resume):
 
     rand_skill = choice(resume_skills)
     post_cnt = Counter(post_skills)
-    reg_post = {k: v / sum(post_cnt.values()) for k, v in post_cnt.items()}
+    reg_post = {k: v / sum(itervalues(post_cnt))
+                for k, v in iteritems(post_cnt)}
     res_cnt = Counter(resume_skills)
-    reg_res = {k: v / sum(res_cnt.values()) for k, v in res_cnt.items()}
+    reg_res = {k: v / sum(itervalues(res_cnt))
+               for k, v in iteritems(res_cnt)}
 
     weights = merge_weights(reg_post, reg_res)
 
@@ -45,13 +51,13 @@ class QuestionBank:
         if model is None:
             # question clustering
             # TODO: set proper keep_n for your need
-            corpus = Corpus(sentences, keep_n=1000)
+            corpus = Corpus(sentences, keep_n=5)
             # TODO: check model and n_clusters param
             model = KMeans(len(mc_ques) // 4, n_jobs=-1)
             model.fit(corpus.get_tfidf(sentences))
             labels = model.labels_
         else:
-            if isinstance(model, str):
+            if isinstance(model, six.string_types):
                 corpus, model = pickle.load(open(model, 'rb'))
             labels = model.predict(corpus.get_tfidf(sentences))
 
@@ -61,7 +67,7 @@ class QuestionBank:
         ques_by_cluster = defaultdict(list)
         for i, q in zip(labels, mc_ques):
             ques_by_cluster[i].append(q)
-        self.mc_ques_clusters = list(ques_by_cluster.values())
+        self.mc_ques_clusters = list(itervalues(ques_by_cluster))
 
         # build sa_dict in advance as it doesn't change
         self.sa_ques = sa_ques
@@ -84,9 +90,11 @@ class QuestionBank:
                 mcq_dict[skill].append(ques)
 
         weights, rand_skill = _get_weight(post, resume)
+        print(weights)
 
-        counts = {k: round(v * num) for k, v in weights.items()}
-        counts = list(sorted(counts.items(), key=lambda x: x[1], reverse=True))
+        counts = {k: int(round(v * num)) for k, v in six.iteritems(weights)}
+        counts = list(sorted(six.iteritems(counts),
+                             key=lambda x: x[1], reverse=True))
 
         ques_list = []
         if rand_skill in self.saq_dict:
@@ -95,6 +103,7 @@ class QuestionBank:
             if v == 0:
                 break
             ques_list.extend(sample(mcq_dict[k], min(v, len(mcq_dict[k]))))
+
         if len(ques_list) < num:
             tmp = []
             n_remain = num - len(ques_list)
