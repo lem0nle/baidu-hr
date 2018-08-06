@@ -9,11 +9,11 @@ from .text import cut, Corpus
 from .util import get_resource
 
 label_list = ['c/c++', 'c#', 'python', 'go', 'java', '其他编程语言', '应用服务',
-              'javascript', 'html/css', '其他前端', 'web后端', '数据库', '硬件',
-              '图形图像', '语音识别', 'nlp', '数据挖掘', '软件工程', '加密和安全',
-              '算法设计', '数学基础', '计算机网络', '体系结构', '操作系统',
-              '分布式系统', '系统管理与维护', 'windows', 'ios', 'android',
-              '机器学习', '深度学习']
+              'javascript', 'html/css', 'java后端', 'php后端', 'python后端',
+              '数据库', '图形图像', '语音识别', 'nlp', '数据挖掘', '软件工程',
+              '加密和安全', '算法设计', '数学基础', '计算机网络', '体系结构', '硬件',
+              '操作系统', '分布式系统', '系统管理与维护', 'windows', 'ios',
+              'android', '机器学习', '深度学习']
 
 
 def _record_path(tree, path):

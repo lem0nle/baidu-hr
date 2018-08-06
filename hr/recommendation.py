@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function, division
 import six
 from six import itervalues, iteritems
 import six.moves.cPickle as pickle
-from random import sample, choice, shuffle
+from random import sample, choice
 from itertools import chain
 from collections import defaultdict, Counter
 from sklearn.cluster import KMeans
@@ -24,14 +24,16 @@ def _get_weight(post, resume):
     post_skills = doc_tagger.tag(post.terms)
     resume_skills = doc_tagger.tag(resume.terms)
 
-    # TODO: reduce weights after 优先
+    # TODO: reduce weights after "优先"
 
     post_skills = list(chain(*post_skills))
     resume_skills = list(chain(*resume_skills))
-    if len(resume_skills) == 0:
-        print(resume)
 
-    rand_skill = choice(resume_skills)
+    if resume_skills:
+        rand_skill = choice(resume_skills)
+    else:
+        rand_skill = choice(post_skills)
+
     post_cnt = Counter(post_skills)
     reg_post = {k: v / sum(itervalues(post_cnt))
                 for k, v in iteritems(post_cnt)}
@@ -80,7 +82,7 @@ class QuestionBank:
         with open(filename, 'wb') as f:
             pickle.dump((self.corpus, self.model), f)
 
-    def recommend(self, post, resume, num=8):
+    def recommend(self, post, resume, num=10):
         mc_ques = [choice(x) for x in self.mc_ques_clusters]
 
         # group mc questions by skill
@@ -90,7 +92,6 @@ class QuestionBank:
                 mcq_dict[skill].append(ques)
 
         weights, rand_skill = _get_weight(post, resume)
-        print(weights)
 
         counts = {k: int(round(v * num)) for k, v in six.iteritems(weights)}
         counts = list(sorted(six.iteritems(counts),
@@ -111,5 +112,7 @@ class QuestionBank:
                 tmp.extend(sample(mcq_dict[k],
                                   min(n_remain, len(mcq_dict[k]))))
             ques_list.extend(sample(tmp, n_remain))
+        if len(ques_list) > num:
+            ques_list = sample(ques_list, num)
 
         return ques_list

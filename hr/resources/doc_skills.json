@@ -137,20 +137,6 @@
         "web前端":
         [
             {
-                "其他前端":
-                [
-                    "Dreamweaver",
-                    "前端开发",
-                    "web前端",
-                    "HBuilder",
-                    "webkit",
-                    "Phonegap",
-                    "FusionCharts",
-                    "WebStorm",
-                    "Silverlight"
-                ]
-            },
-            {
                 "Javascript":
                 [
                     "Javascript",
@@ -191,7 +177,12 @@
                     "Gulpjs",
                     "requireJS",
                     "underscore",
-                    "underscore.js"
+                    "underscore.js",
+                    "前端开发",
+                    "web前端",
+                    "webkit",
+                    "Phonegap",
+                    "FusionCharts"
                 ]
             },
             {
@@ -245,7 +236,11 @@
                     "Flex",
                     "textshadow",
                     "nav",
-                    "li"
+                    "li",
+                    "Dreamweaver",
+                    "HBuilder",
+                    "WebStorm",
+                    "Silverlight"
                 ]
             }
         ]
@@ -766,7 +761,9 @@
                 [
                     "哈希表",
                     "哈希算法",
-                    "simhash"
+                    "simhash",
+                    "散列函数",
+                    "散列表"
                 ]
             },
             {
