@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 from __future__ import unicode_literals, print_function, division
-import six
-from six import itervalues, iteritems
+from six import string_types, itervalues, iteritems
 import six.moves.cPickle as pickle
-from random import sample, choice
+from random import sample, choice, shuffle
 from itertools import chain
 from collections import defaultdict, Counter
 from sklearn.cluster import KMeans
@@ -59,17 +58,28 @@ class QuestionBank:
             model.fit(corpus.get_tfidf(sentences))
             labels = model.labels_
         else:
-            if isinstance(model, six.string_types):
+            if isinstance(model, string_types):
                 corpus, model = pickle.load(open(model, 'rb'))
             labels = model.predict(corpus.get_tfidf(sentences))
 
         self.corpus = corpus
         self.model = model
 
-        ques_by_cluster = defaultdict(list)
         for i, q in zip(labels, mc_ques):
-            ques_by_cluster[i].append(q)
-        self.mc_ques_clusters = list(itervalues(ques_by_cluster))
+            q.label = i
+
+        mcq_dict = defaultdict(list)
+        for ques in mc_ques:
+            for skill in ques.skills:
+                mcq_dict[skill].append(ques)
+
+        self.mcq_clusters = dict()
+        for skill in mcq_dict:
+            ques_by_cluster = defaultdict(list)
+            for q in mcq_dict[skill]:
+                ques_by_cluster[q.label].append(q)
+            mc_ques_clusters = list(itervalues(ques_by_cluster))
+            self.mcq_clusters[skill] = mc_ques_clusters
 
         # build sa_dict in advance as it doesn't change
         self.sa_ques = sa_ques
@@ -82,37 +92,33 @@ class QuestionBank:
         with open(filename, 'wb') as f:
             pickle.dump((self.corpus, self.model), f)
 
-    def recommend(self, post, resume, num=10):
-        mc_ques = [choice(x) for x in self.mc_ques_clusters]
-
-        # group mc questions by skill
-        mcq_dict = defaultdict(list)
-        for ques in mc_ques:
-            for skill in ques.skills:
-                mcq_dict[skill].append(ques)
-
+    def recommend(self, post, resume, num=5):
         weights, rand_skill = _get_weight(post, resume)
 
-        counts = {k: int(round(v * num)) for k, v in six.iteritems(weights)}
-        counts = list(sorted(six.iteritems(counts),
-                             key=lambda x: x[1], reverse=True))
-
         ques_list = []
-        if rand_skill in self.saq_dict:
-            ques_list.append(choice(self.saq_dict[rand_skill]))
+
+        counts = {k: int(round(v * num * 2)) for k, v in iteritems(weights)}
+        counts = list(sorted(iteritems(counts),
+                             key=lambda x: len(self.mcq_clusters[x[0]])))
+
+        id_set = set()
         for k, v in counts:
             if v == 0:
-                break
-            ques_list.extend(sample(mcq_dict[k], min(v, len(mcq_dict[k]))))
+                continue
+            clusters = self.mcq_clusters[k]
+            shuffle(clusters)
+            cur_cluster = 0
+            for i in range(v):
+                q = choice(clusters[cur_cluster])
+                while q.id in id_set:
+                    cur_cluster = (cur_cluster + 1) % len(clusters)
+                    q = choice(clusters[cur_cluster])
+                id_set.add(q.id)
+                ques_list.append(q)
 
-        if len(ques_list) < num:
-            tmp = []
-            n_remain = num - len(ques_list)
-            for k, v in counts[:3]:
-                tmp.extend(sample(mcq_dict[k],
-                                  min(n_remain, len(mcq_dict[k]))))
-            ques_list.extend(sample(tmp, n_remain))
-        if len(ques_list) > num:
-            ques_list = sample(ques_list, num)
+        ques_list = sample(ques_list, num)
+
+        if rand_skill in self.saq_dict:
+            ques_list.append(choice(self.saq_dict[rand_skill]))
 
         return ques_list

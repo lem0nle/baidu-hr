@@ -9,7 +9,7 @@ import hr.recommendation as rcm
 file = open('data/examples/post_campus.json')
 post_resume = json.load(file)
 
-mcqs = doc.load('data/mc_questions.json', doc.MCQuestion)
+mcqs = doc.load('data/mc_questions_sample.json', doc.MCQuestion)
 saqs = doc.load('data/sa_questions.json', doc.SAQuestion)
 
 model_path = 'data/mc_clustering_model.pkl'
@@ -24,4 +24,9 @@ for v in itervalues(post_resume):
     resumes = v['resume']
     resumes = [doc.Resume(terms=r) for r in resumes]
     for resume in resumes:
-        print(bank.recommend(post, resume))
+        qs = bank.recommend(post, resume)
+        print(len(qs))
+        print([x.id for x in qs])
+        print([x.skills for x in qs])
+        break
+    break
