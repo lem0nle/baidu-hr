@@ -166,6 +166,10 @@ _tr = json.loads(get_resource('resources/doc_skills.json'))
 #: Tag documents according to skill tree.
 doc_tagger = TreeTagger(_tr)
 
+_tr = json.loads(get_resource('resources/doc_skills.json'))
+#: Tag questions according to skill tree. The same as doc_tagger for now.
+ques_tagger = TreeTagger(_tr)
+
 if __name__ == '__main__':
     sentences = [
         "基于 node.js 的具有多人注册、登录、发表文章、登出等功能的简单博客 . 使用了 Express 框架和 ejs 模板引擎，以 Markdown 作为文章的编写格式 ， 数据库采用 Mongodb. MVC 模式开发.(个人项目)个人工作: 负责前台页面的设计与调整，后台文章管理、评论、关注等模块的功能实现.引入 pjax ，使用自定义代码块样式提高用户体验，为博客的实用性提供了保障.项目地址: http://chen.zhaishidan.cn/github地址: https://github.com/StionZhai/spring-blog (继续完善中 ， 已投入使用)",
