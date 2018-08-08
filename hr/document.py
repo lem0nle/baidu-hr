@@ -51,7 +51,13 @@ class MCQuestion(Document):
 
 
 class SAQuestion(Document):
-    pass
+    @classmethod
+    def build(cls, main, skills):
+        main = clean(main)
+        main = _r_numword.sub(r'\1', main).strip()
+
+        q = cls(id=str(uuid4()), main=main, skills=skills)
+        return q
 
 
 class Post(Document):
@@ -98,7 +104,7 @@ if __name__ == '__main__':
     print(q)
     q = MCQuestion.build('1. 下', ['1', '3', '4', '2'], ['A', 'C'], [])
     print(q)
-    q = MCQuestion.build('机器学习', ['1', '3', '4', '2'], 'ABC', [])
-    print(q)
     q = MCQuestion.build('\n\n 1、 下', ['1', '3', '4', '2'], '2.0', [])
+    print(q)
+    q = SAQuestion.build('\n1.机器学习\n', ['ml'])
     print(q)

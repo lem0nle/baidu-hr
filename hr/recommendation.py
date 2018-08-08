@@ -20,8 +20,14 @@ def merge_weights(dict1, dict2, frac=0.67):
 
 
 def _get_weight(post, resume):
-    post_skills = doc_tagger.tag(post.terms)
-    resume_skills = doc_tagger.tag(resume.terms)
+    if hasattr(post, 'skills'):
+        post_skills = post.skills
+    else:
+        post_skills = doc_tagger.tag(post.terms)
+    if hasattr(resume, 'skills'):
+        resume_skills = resume.skills
+    else:
+        resume_skills = doc_tagger.tag(resume.terms)
 
     # TODO: reduce weights after "优先"
 

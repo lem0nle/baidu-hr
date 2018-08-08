@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from __future__ import unicode_literals, print_function
+import logging
 import jieba
 import jieba.posseg as pseg
 from io import StringIO
@@ -10,6 +11,7 @@ from .util import get_resource_filename
 from nltk.tokenize import WordPunctTokenizer
 tk = WordPunctTokenizer()
 
+jieba.setLogLevel(logging.INFO)
 jieba.load_userdict(get_resource_filename('resources/dict'))
 
 
