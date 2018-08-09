@@ -96,12 +96,12 @@ class QuestionBank:
         with open(filename, 'wb') as f:
             pickle.dump((self.corpus, self.model), f, protocol=2)
 
-    def recommend(self, post, resume, num=5):
+    def recommend(self, post, resume, objnum=5, subjnum=1):
         weights, rand_skill = _get_weight(post, resume)
 
         ques_list = []
 
-        counts = {k: int(round(v * num * 2)) for k, v in iteritems(weights)}
+        counts = {k: int(round(v * objnum * 2)) for k, v in iteritems(weights)}
         counts = list(sorted(iteritems(counts),
                              key=lambda x: len(self.mcq_clusters[x[0]])))
 
@@ -112,7 +112,8 @@ class QuestionBank:
             clusters = self.mcq_clusters[k]
             shuffle(clusters)
             cur_cluster = 0
-            for i in range(v):
+            cnt = sum(len(x) for x in clusters)
+            for i in range(min(v, cnt)):
                 q = choice(clusters[cur_cluster])
                 while q.id in id_set:
                     cur_cluster = (cur_cluster + 1) % len(clusters)
@@ -120,9 +121,12 @@ class QuestionBank:
                 id_set.add(q.id)
                 ques_list.append(q)
 
-        ques_list = sample(ques_list, num)
+        ques_list = sample(ques_list, objnum)
 
         if rand_skill in self.saq_dict:
-            ques_list.append(choice(self.saq_dict[rand_skill]))
+            subj = sample(self.saq_dict[rand_skill],
+                          min(subjnum, len(self.saq_dict[rand_skill])))
+        else:
+            subj = []
 
-        return ques_list
+        return ques_list, subj

@@ -74,7 +74,7 @@ def dump(docs, filename):
         json.dump(docs, f, indent=4, ensure_ascii=False)
 
 
-def load(filename, cls):
+def load(filename, cls=Document):
     docs = json.load(open(filename))
     return [cls(**x) for x in docs]
 

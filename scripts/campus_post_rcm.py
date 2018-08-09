@@ -24,9 +24,6 @@ else:
     bank = rcm.QuestionBank(mcqs, saqs, keep_n=5)
     bank.save_model(model_path)
 
-mcqs = {q.id: q.__dict__ for q in mcqs}
-saqs = {q.id: q.__dict__ for q in saqs}
-
 
 def rcm_api(postid, resume):
     post = doc.Post(id=postid, name=posts[postid]['name'],
@@ -36,10 +33,10 @@ def rcm_api(postid, resume):
     if postid == 6:
         if 'php后端' in resume.skills and 'c/c++' not in resume.skills:
             post.skills = [[s for s in inner if s != 'c/c++']
-                          for inner in post.skills]
+                           for inner in post.skills]
         if 'c/c++' in resume.skills and 'php后端' not in resume.skills:
             post.skills = [[s for s in inner if s != 'php后端']
-                          for inner in post.skills]
+                           for inner in post.skills]
     qs = bank.recommend(post, resume)
     return [q.id for q in qs]
 
