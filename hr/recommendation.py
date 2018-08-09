@@ -63,7 +63,8 @@ class QuestionBank:
             labels = model.labels_
         else:
             if isinstance(model, string_types):
-                corpus, model = pickle.load(open(model, 'rb'))
+                corpus_state, model = pickle.load(open(model, 'rb'))
+                corpus = Corpus.load_state(corpus_state)
             labels = model.predict(corpus.get_tfidf(sentences))
 
         self.corpus = corpus
@@ -94,7 +95,7 @@ class QuestionBank:
 
     def save_model(self, filename):
         with open(filename, 'wb') as f:
-            pickle.dump((self.corpus, self.model), f, protocol=2)
+            pickle.dump((self.corpus.get_state(), self.model), f, protocol=2)
 
     def recommend(self, post, resume, objnum=5, subjnum=1):
         weights, rand_skill = _get_weight(post, resume)

@@ -81,12 +81,14 @@ def clean(text):
 class Corpus:
     """Class Corpus."""
 
-    def __init__(self, sentences, keep_n=100000):
+    def __init__(self, sentences=None, keep_n=100000):
         """
         Args:
             sentences(list): list of str
             keep_n(int): maximum length of dictionary (default: 100000)
         """
+        if sentences is None:
+            return
         self.sentences = [cut(x) for x in sentences]
         self.dictionary = corpora.Dictionary(self.sentences)
         self.dictionary.filter_extremes(no_below=0, keep_n=keep_n)
@@ -136,12 +138,18 @@ class Corpus:
             vec = corpus2dense(vec, len(self.dictionary)).transpose()
         return vec
 
-    def __getstate__(self):
+    def get_state(self):
         return {
             'sentences': [],
             'dictionary': self.dictionary,
             'tfidf_model': self.tfidf_model
         }
+
+    @classmethod
+    def load_state(cls, state):
+        obj = cls()
+        obj.__dict__.update(state)
+        return obj
 
 
 if __name__ == '__main__':
