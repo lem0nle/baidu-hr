@@ -52,14 +52,12 @@ def _get_weight(post, resume):
 
 
 class QuestionBank:
-    def __init__(self, mc_ques, sa_ques, model=None):
+    def __init__(self, mc_ques, sa_ques, model=None, keep_n=1000):
         sentences = [q.main + ';' + ','.join(q.options) for q in mc_ques]
 
         if model is None:
             # question clustering
-            # TODO: set proper keep_n for your need
-            corpus = Corpus(sentences, keep_n=5)
-            # TODO: check model and n_clusters param
+            corpus = Corpus(sentences, keep_n=keep_n)
             model = KMeans(len(mc_ques) // 4, n_jobs=-1)
             model.fit(corpus.get_tfidf(sentences))
             labels = model.labels_
@@ -96,7 +94,7 @@ class QuestionBank:
 
     def save_model(self, filename):
         with open(filename, 'wb') as f:
-            pickle.dump((self.corpus, self.model), f)
+            pickle.dump((self.corpus, self.model), f, protocol=2)
 
     def recommend(self, post, resume, num=5):
         weights, rand_skill = _get_weight(post, resume)

@@ -21,7 +21,7 @@ model_path = 'data/mc_clustering_model.pkl'
 if os.path.exists(model_path):
     bank = rcm.QuestionBank(mcqs, saqs, model_path)
 else:
-    bank = rcm.QuestionBank(mcqs, saqs)
+    bank = rcm.QuestionBank(mcqs, saqs, keep_n=5)
     bank.save_model(model_path)
 
 mcqs = {q.id: q.__dict__ for q in mcqs}
@@ -49,12 +49,12 @@ if __name__ == '__main__':
         _, postid, resume = sys.argv
     except ValueError:
         print('Please input postid(int) and resume(string or list).')
-        os.exit(1)
+        sys.exit(1)
     try:
         postid = int(postid)
     except ValueError:
         print('Postid should be int-type.')
-        os.exit(1)
+        sys.exit(1)
     if six.PY2:
         resume = resume.decode(sys.stdin.encoding)
     if not resume.strip().startswith('['):
@@ -64,7 +64,7 @@ if __name__ == '__main__':
             resume = literal_eval(resume)
         except (ValueError, SyntaxError):
             print('Resume should be string-type or list-type.')
-            os.exit(1)
+            sys.exit(1)
 
     ques_ids = rcm_api(postid, resume)
     print(ques_ids)

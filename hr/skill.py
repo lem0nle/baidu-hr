@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 import json
 import random
-import pickle
+import six.moves.cPickle as pickle
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support as prf
 from .text import cut, Corpus
@@ -152,7 +152,8 @@ class ClfTagger:
 
     def save(self, filename):
         with open(filename, "wb") as file:
-            pickle.dump((self.corpus, self.models, self.clf_thres), file)
+            pickle.dump((self.corpus, self.models, self.clf_thres),
+                        file, protocol=2)
 
     @classmethod
     def load(cls, filename):
