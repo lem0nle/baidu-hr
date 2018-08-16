@@ -102,18 +102,19 @@ class QuestionBank:
 
         ques_list = []
 
-        counts = {k: int(round(v * objnum * 2)) for k, v in iteritems(weights)}
-        counts = list(sorted(iteritems(counts),
-                             key=lambda x: len(self.mcq_clusters[x[0]])))
+        c = min(itervalues(weights)) + 0.01
+        counts = {k: int(round(v * objnum // c))
+                  for k, v in iteritems(weights)}
+        counts = sorted(iteritems(counts), key=lambda x: x[1], reverse=True)
 
         id_set = set()
         for k, v in counts:
-            if v == 0:
+            if v == 0 or k not in self.mcq_clusters:
                 continue
             clusters = self.mcq_clusters[k]
             shuffle(clusters)
             cur_cluster = 0
-            cnt = sum(len(x) for x in clusters)
+            cnt = len([q for q in chain(*clusters) if q.id not in id_set])
             for i in range(min(v, cnt)):
                 q = choice(clusters[cur_cluster])
                 while q.id in id_set:
